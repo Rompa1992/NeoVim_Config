@@ -1,0 +1,79 @@
+{
+    "Zero data struct": {
+        "prefix": "zstruct",
+        "description": "POD data struct (no methods)",
+        "body": [
+            "struct F${1:Name}",
+            "{",
+            "\t${2:float} ${3:Value} = ${4:0.0f};$0",
+            "};"
+        ]
+    },
+    "Zero system function": {
+        "prefix": "zsys",
+        "description": "Free function that operates on data by reference",
+        "body": [
+            "void ${1:Update}${2:Things}(F${3:Data}& ${4:Data})",
+            "{",
+            "\t$0",
+            "}"
+        ]
+    },
+    "Zero enum": {
+        "prefix": "zenum",
+        "description": "enum class with explicit underlying type",
+        "body": [
+            "enum class E${1:Name} : uint8",
+            "{",
+            "\t${2:None},$0",
+            "};"
+        ]
+    },
+    "Zero check": {
+        "prefix": "zcheck",
+        "description": "check(Condition)",
+        "body": ["check(${1:Condition});$0"]
+    },
+    "Zero check with message": {
+        "prefix": "zcheckf",
+        "description": "checkf(Condition, \"fmt\", ...)",
+        "body": ["checkf(${1:Condition}, \"${2:Message}\"$3);$0"]
+    },
+    "Zero namespace": {
+        "prefix": "zns",
+        "description": "namespace Zero block",
+        "body": [
+            "namespace Zero",
+            "{",
+            "",
+            "$0",
+            "",
+            "} // namespace Zero"
+        ]
+    },
+    "Zero index loop": {
+        "prefix": "zfor",
+        "description": "Index loop with an int32 counter",
+        "body": [
+            "for (int32 ${1:Index} = 0; ${1:Index} < ${2:Count}; ++${1:Index})",
+            "{",
+            "\t$0",
+            "}"
+        ]
+    },
+    "Zero log Info": {
+        "prefix": "zlogi",
+        "description": "ZERO_<System>_LOG Info",
+        "body": ["ZERO_${1:AI}_LOG(Info, \"$2\"$3);$0"]
+    },
+    "Zero log Warning": {
+        "prefix": "zlogw",
+        "description": "ZERO_<System>_LOG Warning",
+        "body": ["ZERO_${1:AI}_LOG(Warning, \"$2\"$3);$0"]
+    },
+    "Zero log Error": {
+        "prefix": "zloge",
+        "description": "ZERO_<System>_LOG Error",
+        "body": ["ZERO_${1:AI}_LOG(Error, \"$2\"$3);$0"]
+    }
+}
