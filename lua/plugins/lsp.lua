@@ -2,10 +2,11 @@ return {
     {
         -- LSP (clangd)
         -- Real C++ understanding: errors, go-to-definition, completion, inlay hints
+        -- Formatting NEVER runs automatically. Only Space + cf formats, and only when you press it.
         -- Use: gd          go to definition
         --      gD          go to declaration
         --      Space + h   switch between .h and .cpp
-        --      Space + cf  format file
+        --      Space + cf  format file (manual only)
         --      Space + ci  toggle inlay hints
         "neovim/nvim-lspconfig",
         lazy = false,
@@ -30,24 +31,7 @@ return {
             })
             vim.lsp.enable("clangd")
 
-            -- One shared group for format-on-save. Cleared per buffer on every attach (below),
-            -- so re-attaching after Space + cr never adds a second formatter to the same file.
-            local FormatGroup = vim.api.nvim_create_augroup("ZeroFormatOnSave", { clear = true })
-
-            -- Formats the buffer with clangd only (never another LSP that might attach later),
-            -- synchronously, so the file is fully formatted before it's written.
-            local function format_buffer(Buffer)
-                vim.lsp.buf.format({
-                    bufnr = Buffer,
-                    async = false,
-                    timeout_ms = 2000,
-                    filter = function(Client)
-                        return Client.name == "clangd"
-                    end,
-                })
-            end
-
-            -- Keymaps, inlay hints and format-on-save for buffers where an LSP is attached
+            -- Keymaps and inlay hints for buffers where clangd is attached
             vim.api.nvim_create_autocmd("LspAttach", {
                 callback = function(args)
                     local Client = vim.lsp.get_client_by_id(args.data.client_id)
@@ -62,8 +46,17 @@ return {
                     map("<leader>h", "<cmd>LspClangdSwitchSourceHeader<CR>", "Switch .h/.cpp")
                     map("gd", vim.lsp.buf.definition, "Go to definition")
                     map("gD", vim.lsp.buf.declaration, "Go to declaration")
+
+                    -- Manual formatting only
                     map("<leader>cf", function()
-                        format_buffer(args.buf)
+                        vim.lsp.buf.format({
+                            bufnr = args.buf,
+                            async = false,
+                            timeout_ms = 2000,
+                            filter = function(FormatClient)
+                                return FormatClient.name == "clangd"
+                            end,
+                        })
                     end, "Format file")
 
                     -- Inlay hints: parameter names and deduced types shown dimly inside the code (off by default)
@@ -73,17 +66,6 @@ return {
                         local bEnabled = vim.lsp.inlay_hint.is_enabled({ bufnr = args.buf })
                         vim.lsp.inlay_hint.enable(not bEnabled, { bufnr = args.buf })
                     end, "Toggle inlay hints")
-
-                    -- Format with .clang-format every time the file is saved.
-                    -- Remove this buffer's previous format-on-save first, so there is always exactly one.
-                    vim.api.nvim_clear_autocmds({ group = FormatGroup, buffer = args.buf })
-                    vim.api.nvim_create_autocmd("BufWritePre", {
-                        group = FormatGroup,
-                        buffer = args.buf,
-                        callback = function()
-                            format_buffer(args.buf)
-                        end,
-                    })
                 end,
             })
         end,

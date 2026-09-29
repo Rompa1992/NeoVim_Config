@@ -2,7 +2,8 @@ return {
     {
         -- DAP (debugger)
         -- Breakpoints and stepping inside Neovim, using codelldb
-        -- Use: F5 build + start debugging, or continue if already debugging
+        -- Use: F5 build + debug Game.exe, or continue if already debugging
+        --      Space + dt  build + debug ZeroTests.exe
         --      Shift+F5 stop
         --      F9 breakpoint          F10 step over
         --      F11 step into          F12 step out
@@ -32,52 +33,65 @@ return {
                 executable = {
                     command = codelldb,
                     args = { "--port", "${port}" },
-                    detached = false,  -- required on Windows
+                    detached = false, -- required on Windows
                 },
             }
 
-            -- What F5 launches
-            dap.configurations.cpp = {
-                {
-                    name = "Launch Debug",
+            -- Base launch settings. The exe path is filled in per launch (see start_debugging).
+            local function make_config(exe)
+                return {
+                    name = "Launch " .. exe,
                     type = "codelldb",
                     request = "launch",
-
-                    -- Which exe to run: finds the .exe in build/ automatically (see lua/config/project.lua)
-                    program = function()
-                        return require("config.project").find_exe("build")
-                    end,
-
+                    program = exe,
                     cwd = "${workspaceFolder}",
                     stopOnEntry = false,
-
-                    -- Program output goes to the debug console panel, not a separate terminal window
-                    terminal = "console",
-                },
-            }
+                    terminal = "console", -- program output goes to the debug console panel
+                }
+            end
 
             -- Open panels when debugging starts, close when it ends
-            dap.listeners.after.event_initialized["dapui"] = function() dapui.open() end
-            dap.listeners.before.event_terminated["dapui"] = function() dapui.close() end
-            dap.listeners.before.event_exited["dapui"] = function() dapui.close() end
+            dap.listeners.after.event_initialized["dapui"] = function()
+                dapui.open()
+            end
+            dap.listeners.before.event_terminated["dapui"] = function()
+                dapui.close()
+            end
+            dap.listeners.before.event_exited["dapui"] = function()
+                dapui.close()
+            end
 
-            -- F5: continue if already debugging, otherwise save, build Debug, and start
-            local function build_and_debug()
-                if dap.session() then
-                    dap.continue()
+            -- Save, build Debug, find <exe_name>.exe in build/, and start debugging it
+            local function start_debugging(exe_name)
+                vim.cmd("wall")
+                vim.cmd("silent make!")
+
+                if vim.v.shell_error ~= 0 then
+                    vim.cmd("copen") -- build failed: show errors, don't debug
                     return
                 end
 
-                vim.cmd("wall")
-                vim.cmd("make")
-
-                if vim.v.shell_error ~= 0 then
-                    vim.cmd("copen")  -- build failed: show errors, don't debug
+                local exe = require("config.project").find_exe("build", exe_name)
+                if not exe then
+                    vim.notify("No " .. exe_name .. ".exe found in build/", vim.log.levels.ERROR)
                     return
                 end
 
                 vim.cmd("cclose")
-                dap.run(dap.configurations.cpp[1])
+                dap.run(make_config(exe))
+            end
+
+            -- F5: continue if already debugging, otherwise build and debug the game
+            local function debug_game()
+                if dap.session() then
+                    dap.continue()
+                    return
+                end
+                start_debugging("Game")
+            end
+
+            local function debug_tests()
+                start_debugging("ZeroTests")
             end
 
             -- Stop the program and close the panels
@@ -87,7 +101,8 @@ return {
             end
 
             local map = vim.keymap.set
-            map("n", "<F5>", build_and_debug, { desc = "Debug: build + start / continue" })
+            map("n", "<F5>", debug_game, { desc = "Debug: build + debug Game / continue" })
+            map("n", "<leader>dt", debug_tests, { desc = "Debug: build + debug ZeroTests" })
             map("n", "<S-F5>", stop, { desc = "Debug: stop" })
             map("n", "<F9>", dap.toggle_breakpoint, { desc = "Debug: breakpoint" })
             map("n", "<F10>", dap.step_over, { desc = "Debug: step over" })
