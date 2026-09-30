@@ -64,7 +64,7 @@ return {
             -- Save, build Debug, find <exe_name>.exe in build/, and start debugging it
             local function start_debugging(exe_name)
                 vim.cmd("wall")
-                vim.cmd("silent make!")
+                if not require("config.build").Build("debug") then return end
 
                 if vim.v.shell_error ~= 0 then
                     vim.cmd("copen") -- build failed: show errors, don't debug

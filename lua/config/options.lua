@@ -2,6 +2,8 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+vim.opt.fileformats = "unix,dos"   -- new files use LF; existing files keep whatever they have
+
 -- =============================================================================
 -- Display
 -- =============================================================================
