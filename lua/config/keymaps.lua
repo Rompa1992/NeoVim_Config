@@ -79,3 +79,11 @@ vim.keymap.set("n", "<leader>cr", function()
         vim.cmd("edit")
     end, 500)
 end, { desc = "Restart clangd" })
+
+-- Move lines up and down with Alt+arrows
+vim.keymap.set("n", "<A-Down>", "<cmd>m .+1<cr>", { desc = "Move line down" })
+vim.keymap.set("n", "<A-Up>", "<cmd>m .-2<cr>", { desc = "Move line up" })
+vim.keymap.set("i", "<A-Down>", "<esc><cmd>m .+1<cr>gi", { desc = "Move line down" })
+vim.keymap.set("i", "<A-Up>", "<esc><cmd>m .-2<cr>gi", { desc = "Move line up" })
+vim.keymap.set("v", "<A-Down>", ":m '>+1<cr>gv", { desc = "Move selection down" })
+vim.keymap.set("v", "<A-Up>", ":m '<-2<cr>gv", { desc = "Move selection up" })
