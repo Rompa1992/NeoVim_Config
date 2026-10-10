@@ -17,6 +17,7 @@ return {
         --      Space + ds  scopes in a big floating window, q closes it
         --      Space + dr  run to the cursor's line
         -- Breakpoints are saved per file and come back next time.
+        -- Files the debugger steps into get no tab, and close when debugging stops, unless you edit them.
         -- In the panel: S Scopes, W Watches, T Threads, B Breakpoints, R REPL; g? lists that view's keys
         "mfussenegger/nvim-dap",
 
@@ -141,6 +142,14 @@ return {
             local function debug_tests()
                 start_debugging("ZeroTests")
             end
+
+            -- When debugging ends, close the files it opened that you didn't edit (config/preview.lua)
+            local function ClosePreviews()
+                vim.schedule(require("config.preview").CloseDebugPreviews)
+            end
+            dap.listeners.after.event_terminated["ZeroPreview"] = ClosePreviews
+            dap.listeners.after.event_exited["ZeroPreview"] = ClosePreviews
+            dap.listeners.after.disconnect["ZeroPreview"] = ClosePreviews
 
             -- Stop the program and close the panels
             local function stop()
