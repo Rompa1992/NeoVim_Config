@@ -15,6 +15,27 @@ vim.opt.cursorline = true       -- highlight the current line
 vim.opt.scrolloff = 8           -- keep 8 lines above/below the cursor (stays clear of pinned context)
 vim.opt.colorcolumn = "120"     -- vertical guide at the .clang-format line limit
 vim.opt.winborder = "rounded"   -- rounded borders on popups (hover, diagnostics)
+vim.opt.splitright = true       -- vertical splits open on the right
+vim.opt.splitbelow = true       -- horizontal splits open below
+
+-- =============================================================================
+-- Editing
+-- =============================================================================
+vim.opt.undofile = true         -- undo history survives closing and reopening a file
+vim.opt.ignorecase = true       -- search ignores case...
+vim.opt.smartcase = true        -- ...unless the search has a capital letter
+
+-- Enter, o and O never continue a comment onto the new line.
+-- Filetype plugins turn it back on per buffer, so it's removed after they run.
+vim.api.nvim_create_autocmd("FileType", {
+    callback = function(Args)
+        vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(Args.buf) then
+                vim.bo[Args.buf].formatoptions = (vim.bo[Args.buf].formatoptions:gsub("[ro]", ""))
+            end
+        end)
+    end,
+})
 
 -- =============================================================================
 -- Indentation: 4 spaces

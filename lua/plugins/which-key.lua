@@ -21,6 +21,8 @@ return {
                 { "<leader>d", group = "Debug" },
                 { "<leader>c", group = "Code" },
                 { "<leader>g", group = "Git" },
+                { "<leader>q", group = "Session" },
+                { "<leader>e", group = "Errors (Trouble)" },
             },
         },
 

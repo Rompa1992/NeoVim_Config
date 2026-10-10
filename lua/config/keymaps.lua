@@ -2,11 +2,37 @@
 -- General
 -- =====================================================================
 
--- F2: toggle file tree
-vim.keymap.set("n", "<F2>", "<Cmd>Neotree toggle<CR>", { desc = "File tree" })
+-- F2: toggle file tree, from Normal or Insert mode
+vim.keymap.set({ "n", "i" }, "<F2>", function()
+    vim.cmd("stopinsert") -- leave Insert first, so keys in the tree move instead of typing
+    vim.cmd("Neotree toggle")
+end, { desc = "File tree" })
 
--- jk in Insert mode returns to Normal mode
-vim.keymap.set("i", "jk", "<Esc>", { desc = "Exit insert mode" })
+-- jj in Insert mode returns to Normal mode
+vim.keymap.set("i", "jj", "<Esc>", { desc = "Exit insert mode" })
+
+-- Ctrl+Right: next word, but stop at the end of the line instead of wrapping to the next one
+local function WordRightInLine()
+    local Row = vim.api.nvim_win_get_cursor(0)[1]
+    vim.cmd("normal! w")
+    if vim.api.nvim_win_get_cursor(0)[1] ~= Row then
+        local LineLength = #vim.api.nvim_buf_get_lines(0, Row - 1, Row, false)[1]
+        local bInsertMode = vim.api.nvim_get_mode().mode == "i"
+        local EndCol = bInsertMode and LineLength or math.max(LineLength - 1, 0) -- Insert can sit past the last character
+        vim.api.nvim_win_set_cursor(0, { Row, EndCol })
+    end
+end
+vim.keymap.set({ "n", "i" }, "<C-Right>", WordRightInLine, { desc = "Next word (stay on line)" })
+
+-- Ctrl+Left: previous word, but stop at the start of the line instead of wrapping to the one above
+local function WordLeftInLine()
+    local Row = vim.api.nvim_win_get_cursor(0)[1]
+    vim.cmd("normal! b")
+    if vim.api.nvim_win_get_cursor(0)[1] ~= Row then
+        vim.api.nvim_win_set_cursor(0, { Row, 0 })
+    end
+end
+vim.keymap.set({ "n", "i" }, "<C-Left>", WordLeftInLine, { desc = "Previous word (stay on line)" })
 
 -- Esc in Normal mode: clear search highlighting
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlight" })
@@ -39,6 +65,10 @@ vim.keymap.set("i", "<C-v>", function()
     return "<C-r><C-o>+"
 end, { expr = true, desc = "Paste" })
 
+-- Ctrl+V with a selection: replace it with the clipboard. Unmapped, Ctrl+V switches to block selection.
+-- "_ sends the replaced text to the black hole register, so it doesn't overwrite what you copied.
+vim.keymap.set("x", "<C-v>", '"_c<C-r><C-o>+', { desc = "Paste over selection" })
+
 -- Ctrl+Backspace in Insert mode: delete the previous word
 -- (terminals send it as either <C-BS> or <C-h>, so map both)
 vim.keymap.set("i", "<C-BS>", "<C-w>", { desc = "Delete previous word" })
@@ -69,14 +99,18 @@ vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Window up" })
 vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Window right" })
 
 -- Space + cr: restart clangd (after adding files or changing CMake)
+-- Never saves or reloads your files: unsaved changes stay exactly as they are
 vim.keymap.set("n", "<leader>cr", function()
-    vim.cmd("wall") -- save first, so reopening the file loses nothing
-    vim.lsp.stop_client(vim.lsp.get_clients({ bufnr = 0 }))
+    vim.lsp.stop_client(vim.lsp.get_clients({ name = "clangd" }))
     vim.notify("Restarting clangd...", vim.log.levels.INFO)
 
-    -- Reopen the file after clangd has stopped; clangd re-attaches automatically
+    -- Once it has stopped, re-run each C/C++ buffer's FileType event: vim.lsp.enable starts clangd on it again
     vim.defer_fn(function()
-        vim.cmd("edit")
+        for _, Buf in ipairs(vim.api.nvim_list_bufs()) do
+            if vim.api.nvim_buf_is_loaded(Buf) and vim.tbl_contains({ "c", "cpp" }, vim.bo[Buf].filetype) then
+                vim.api.nvim_exec_autocmds("FileType", { buffer = Buf })
+            end
+        end
     end, 500)
 end, { desc = "Restart clangd" })
 

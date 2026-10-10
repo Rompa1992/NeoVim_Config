@@ -2,8 +2,7 @@ return {
     {
         -- Bufferline
         -- Shows open files as tabs across the top
-        -- Use: Space + d    previous file
-        --      Space + a    next file
+        -- Use: Space + a    next file
         --      Space + x    close current file (keeps the window layout)
         --      Click X / right-click a tab: close that file (keeps the window layout)
         "akinsho/bufferline.nvim",
@@ -11,7 +10,7 @@ return {
 
         dependencies = {
             "nvim-tree/nvim-web-devicons",
-            "echasnovski/mini.bufremove", -- deletes a buffer without closing its window
+            "nvim-mini/mini.bufremove", -- deletes a buffer without closing its window
         },
 
         opts = {
@@ -36,7 +35,6 @@ return {
         config = function(_, opts)
             require("bufferline").setup(opts)
 
-            vim.keymap.set("n", "<leader>d", "<cmd>BufferLineCyclePrev<CR>", { desc = "Previous file" })
             vim.keymap.set("n", "<leader>a", "<cmd>BufferLineCycleNext<CR>", { desc = "Next file" })
 
             -- Space + x: close the current file but keep the window (plain :bdelete would close the window too)

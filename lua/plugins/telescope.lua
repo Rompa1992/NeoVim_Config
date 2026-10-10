@@ -11,9 +11,18 @@ return {
 
         dependencies = {
             "nvim-lua/plenary.nvim",
+
+            -- Faster, smarter fuzzy matching. Compiled once by CMake when installed or updated.
+            {
+                "nvim-telescope/telescope-fzf-native.nvim",
+                build = "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release",
+            },
         },
 
         config = function()
+            -- pcall: if the fzf build ever fails, Telescope still works with its default matcher
+            pcall(require("telescope").load_extension, "fzf")
+
             local map = vim.keymap.set
 
             map("n", "<leader>ff", "<cmd>Telescope find_files<CR>",           { desc = "Find files" })

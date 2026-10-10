@@ -33,18 +33,25 @@ local function CountValidQuickfixEntries()
 end
 
 -- Builds a CMake preset ("debug" or "release"). Returns true if the build succeeded.
+-- Runs cmake directly with vim.system, not :make, so the exit code is CMake's own.
+-- Through :make on Windows the shell can hide a failure and report success.
 function M.Build(Preset)
     Preset = Preset or "debug"
 
     vim.cmd("silent! wall")
 
-    local SavedMakeprg = vim.o.makeprg
-    vim.o.makeprg = "cmake --build --preset " .. Preset
-    vim.cmd("silent make!")
-    vim.o.makeprg = SavedMakeprg
+    local Result = vim.system({ "cmake", "--build", "--preset", Preset }, { text = true }):wait()
+    local Output = (Result.stdout or "") .. (Result.stderr or "")
 
-    -- :make stores the build command's exit code here: 0 = success
-    if vim.v.shell_error ~= 0 then
+    -- Fill the quickfix list from the output, using the same errorformat :make used
+    vim.fn.setqflist({}, " ", {
+        title = "Build (" .. Preset .. ")",
+        lines = vim.split(Output, "\r?\n", { trimempty = true }),
+        efm = vim.o.errorformat,
+    })
+
+    -- 0 = success; anything else is a failed configure, compile or link
+    if Result.code ~= 0 then
         Notify("Build FAILED (" .. Preset .. ")", vim.log.levels.ERROR)
         vim.cmd("botright copen")
         return false
@@ -62,7 +69,8 @@ function M.Build(Preset)
     return true
 end
 
-local function ExePath(Preset, Name)
+-- Path to build/bin/<Name>(.exe) for a preset, or nil if it doesn't exist. dap.lua uses it too.
+function M.ExePath(Preset, Name)
     local BuildDir = (Preset == "release") and "build-release" or "build"
     local Extension = (vim.fn.has("win32") == 1) and ".exe" or ""
     local Path = BuildDir .. "/bin/" .. Name .. Extension
@@ -109,7 +117,7 @@ function M.BuildAndRun(Name, Preset)
         return
     end
 
-    local Path = ExePath(Preset, Name)
+    local Path = M.ExePath(Preset, Name)
     if not Path then
         Notify("Built, but " .. Name .. " was not found in " .. Preset .. " output (build/bin/)", vim.log.levels.ERROR)
         return
@@ -124,4 +132,3 @@ vim.keymap.set("n", "<leader>r", function() M.BuildAndRun("Game") end, { desc = 
 vim.keymap.set("n", "<leader>t", function() M.BuildAndRun("ZeroTests") end, { desc = "Build + run ZeroTests" })
 
 return M
-

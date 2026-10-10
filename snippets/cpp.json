@@ -75,5 +75,10 @@
         "prefix": "zloge",
         "description": "ZERO_<System>_LOG Error",
         "body": ["ZERO_${1:AI}_LOG(Error, \"$2\"$3);$0"]
+    },
+    "Zero nodiscard": {
+        "prefix": "znd",
+        "description": "[[nodiscard]] attribute, no brackets",
+        "body": ["[[nodiscard]] $0"]
     }
 }

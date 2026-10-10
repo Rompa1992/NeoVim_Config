@@ -18,30 +18,30 @@ return {
                     -- Dark background
                     dark0_hard = c.bg_hard,
                     dark0      = c.bg,
-                    dark0_soft = "#252523",
+                    dark0_soft = c.gruvbox.dark0_soft,
 
                     -- UI / borders
                     dark1 = c.surface1,
                     dark2 = c.surface2,
-                    dark3 = "#5b554b",
+                    dark3 = c.gruvbox.dark3,
 
                     -- Foreground
-                    light0_hard = "#d8cdb0",
+                    light0_hard = c.gruvbox.light0_hard,
                     light0      = c.fg,
                     light0_soft = c.fg_soft,
 
                     light1 = c.beige,
-                    light2 = "#81796b",
+                    light2 = c.gruvbox.light2,
                     light3 = c.gray,
 
                     -- Gruvbox accents, kept muted
-                    bright_red    = "#c4675f",
-                    bright_green  = "#929f60",
-                    bright_yellow = "#bca05e",
-                    bright_blue   = "#657f87",
-                    bright_purple = "#a8788b",
-                    bright_aqua   = "#718b78",
-                    bright_orange = "#c08050",
+                    bright_red    = c.gruvbox.bright_red,
+                    bright_green  = c.gruvbox.bright_green,
+                    bright_yellow = c.gruvbox.bright_yellow,
+                    bright_blue   = c.gruvbox.bright_blue,
+                    bright_purple = c.gruvbox.bright_purple,
+                    bright_aqua   = c.gruvbox.bright_aqua,
+                    bright_orange = c.gruvbox.bright_orange,
                 },
 
                 overrides = {
@@ -94,32 +94,48 @@ return {
                     ["@number"]       = { fg = c.pink },
                     ["@number.float"] = { fg = c.pink },
 
-                    -- Built-in types
-                    ["@type.builtin"] = { fg = c.pink },
+                    -- Built-in types (float, bool, char): the same pink as every other type
+                    ["@type.builtin"] = { fg = c.type_pink or c.prussian },
 
                     -- void / return (void comes from after/queries/cpp/highlights.scm)
                     ["@type.void"]      = { fg = c.red, bold = true },
                     ["@keyword.return"] = { fg = c.red, bold = true },
 
                     -- Your own types and members before clangd attaches
-                    ["@type"]            = { fg = c.prussian },
+                    ["@type"]            = { fg = c.type_pink or c.prussian },
                     ["@property"]        = { fg = c.prussian_light },
                     ["@variable.member"] = { fg = c.prussian_light },
-                    ["@module"]          = { fg = c.muted_pink, italic = true },
+                    ["@module"]          = { fg = c.beige, italic = true },
 
                     -- =========================================================
                     -- Keyword structure
                     -- =========================================================
 
+                    -- Plain keywords (template, namespace, using, typename): quiet, so red means control flow only
+                    ["@keyword"] = { fg = c.beige },
+
                     -- Control flow (if, else, switch, for, while): red, like return
                     ["@keyword.conditional"] = { fg = c.red },
                     ["@keyword.repeat"]      = { fg = c.red },
 
-                    -- Modifiers (static, constexpr, inline, extern): quiet italic
-                    ["@keyword.modifier"] = { fg = c.beige, italic = true },
+                    -- Modifiers (constexpr, inline, extern): soft text colour, not italic, so they never look like comments
+                    ["@keyword.modifier"] = { fg = c.fg_soft },
 
-                    -- const: rusty brown (from after/queries/cpp/highlights.scm)
-                    ["@keyword.const"] = { fg = c.rust, italic = true },
+                    -- const: the palette's qualifier colour (from after/queries/cpp/highlights.scm)
+                    ["@keyword.const"] = { fg = c.qualifier, italic = true },
+
+                    -- static: the same red as delete (from after/queries/cpp/highlights.scm)
+                    ["@keyword.static"] = { link = "@keyword.operator" },
+
+                    -- public, private, protected: the #include orange (from after/queries/cpp/highlights.scm)
+                    ["@keyword.access"] = { fg = c.directive_orange },
+
+                    -- constexpr, inline: the quiet modifier colour (from after/queries/cpp/highlights.scm)
+                    ["@keyword.constexpr"] = { link = "@keyword.modifier" },
+                    ["@keyword.inline"]    = { link = "@keyword.modifier" },
+
+                    -- static_assert: the macro purple, like check and checkf, without the bold
+                    ["@keyword.static_assert"] = { fg = c.macro_purple },
 
                     -- Type keywords (struct, enum, class): Prussian italic
                     ["@keyword.type"] = { fg = c.prussian, italic = true },
@@ -129,7 +145,59 @@ return {
                     -- =========================================================
 
                     ["@punctuation.delimiter"] = { fg = c.gray },     -- ; , . ::
-                    ["@operator"]              = { fg = c.fg_soft },  -- = + - * < > && &
+                    ["@operator"]              = { fg = c.operator or c.fg_soft },  -- = + - * < > && & !
+
+                    -- =========================================================
+                    -- Markdown (render-markdown.lua): headings step down from amber, CRT-style
+                    -- =========================================================
+
+                    ["@markup.heading.1.markdown"] = { fg = c.string_yellow, bold = true },
+                    ["@markup.heading.2.markdown"] = { fg = c.directive_orange, bold = true },
+                    ["@markup.heading.3.markdown"] = { fg = c.green, bold = true },
+                    ["@markup.heading.4.markdown"] = { fg = c.prussian_light, bold = true },
+                    ["@markup.heading.5.markdown"] = { fg = c.muted_pink },
+                    ["@markup.heading.6.markdown"] = { fg = c.beige },
+
+                    RenderMarkdownH1 = { fg = c.string_yellow, bold = true },
+                    RenderMarkdownH2 = { fg = c.directive_orange, bold = true },
+                    RenderMarkdownH3 = { fg = c.green, bold = true },
+                    RenderMarkdownH4 = { fg = c.prussian_light, bold = true },
+                    RenderMarkdownH5 = { fg = c.muted_pink },
+                    RenderMarkdownH6 = { fg = c.beige },
+
+                    -- Heading bands: the faintest tint of each heading colour
+                    RenderMarkdownH1Bg = { bg = "#29231a" },
+                    RenderMarkdownH2Bg = { bg = "#291e17" },
+                    RenderMarkdownH3Bg = { bg = "#1f2218" },
+                    RenderMarkdownH4Bg = { bg = "#1d2022" },
+                    RenderMarkdownH5Bg = { bg = "#241d20" },
+                    RenderMarkdownH6Bg = { bg = c.band },
+
+                    -- Code: blocks on the popup background, inline code in brass
+                    RenderMarkdownCode           = { bg = c.guide },
+                    RenderMarkdownCodeInline     = { fg = c.template or c.orange, bg = c.band },
+                    ["@markup.raw.markdown_inline"] = { fg = c.template or c.orange },
+
+                    -- Text
+                    ["@markup.strong"]     = { fg = c.fg, bold = true },
+                    ["@markup.italic"]     = { fg = c.fg_soft, italic = true },
+                    ["@markup.link.label"] = { fg = c.prussian_light, underline = true },
+                    ["@markup.link.url"]   = { fg = c.gray, underline = true },
+                    ["@markup.quote"]      = { fg = c.fg_soft, italic = true },
+                    RenderMarkdownBullet   = { fg = c.directive_orange },
+                    RenderMarkdownQuote    = { fg = c.gray },
+                    RenderMarkdownDash     = { fg = c.surface2 },
+
+                    -- Tables: amber header, quiet borders
+                    RenderMarkdownTableHead = { fg = c.string_yellow },
+                    RenderMarkdownTableRow  = { fg = c.gray },
+
+                    -- Callouts: info and notes blue, tips green, questions and warnings amber, errors red
+                    RenderMarkdownInfo    = { fg = c.prussian_light },
+                    RenderMarkdownSuccess = { fg = c.green },
+                    RenderMarkdownHint    = { fg = c.macro_purple },
+                    RenderMarkdownWarn    = { fg = c.string_yellow },
+                    RenderMarkdownError   = { fg = c.red },
 
                     -- =========================================================
                     -- Rainbow brackets (rainbow-delimiters.lua): muted, by depth
@@ -165,9 +233,21 @@ return {
                     -- =========================================================
 
                     -- Classes / structs
-                    ["@lsp.type.class"]  = { fg = c.prussian },
-                    ["@lsp.type.struct"] = { fg = c.prussian },
-                    ["@lsp.type.type"]   = { fg = c.prussian },
+                    ["@lsp.type.class"]  = { fg = c.type_pink or c.prussian },
+                    ["@lsp.type.struct"] = { fg = c.type_pink or c.prussian },
+                    ["@lsp.type.type"]   = { fg = c.type_pink or c.prussian },
+
+                    -- clangd calls classes and structs both "class"; the LspTokenUpdate
+                    -- autocommand in lsp.lua splits them by prefix: C types and F types
+                    ["@lsp.zero.class"]  = { fg = c.muted_pink },
+                    ["@lsp.zero.struct"] = { fg = c.prussian_strong },
+
+                    -- T types (TArray, TFixedArray, TStaticArray, TArrayView, TUniquePtr): Prussian blue,
+                    -- so the container stands apart from the pink element type inside it (lsp.lua)
+                    ["@lsp.zero.template"] = { fg = c.template or c.prussian },
+
+                    -- Members of C classes: white like locals, but bold. Struct members stay pale blue
+                    ["@lsp.zero.classmember"] = { fg = c.fg, bold = true },
 
                     -- Struct / class members
                     ["@lsp.type.property"] = { fg = c.prussian_light },
@@ -195,15 +275,12 @@ return {
                     ["@lsp.typemod.method.declaration"]   = { fg = c.green, bold = true },
                     ["@lsp.typemod.method.definition"]    = { fg = c.green },
 
-                    -- Standard library functions
-                    ["@lsp.typemod.function.defaultLibrary"] = { fg = c.beige },
-                    ["@lsp.typemod.method.defaultLibrary"]   = { fg = c.beige },
+                    -- Standard library functions: green like the rest, so nothing changes colour while clangd restarts
+                    ["@lsp.typemod.function.defaultLibrary"] = { fg = c.green },
+                    ["@lsp.typemod.method.defaultLibrary"]   = { fg = c.green },
 
                     -- Namespaces
-                    ["@lsp.type.namespace"] = { fg = c.muted_pink, italic = true },
-
-                    -- const / readonly variables: bold on top of their colour
-                    ["@lsp.mod.readonly"] = { bold = true },
+                    ["@lsp.type.namespace"] = { fg = c.beige, italic = true },
                 },
             })
 
