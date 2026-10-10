@@ -7,6 +7,12 @@ return {
             "MunifTanjim/nui.nvim",
             "nvim-tree/nvim-web-devicons",
         },
+        opts = {
+            filesystem = {
+                -- The tree jumps to, and highlights, whichever file you're editing
+                follow_current_file = { enabled = true },
+            },
+        },
         init = function()
             -- Entering the tree always lands in Normal mode, so Enter, o and the arrows
             -- open and expand nodes even if you came from Insert mode in a code window.

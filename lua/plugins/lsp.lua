@@ -98,21 +98,45 @@ return {
                 return IsClassName((Text:gsub("^Zero::", "")))
             end
 
-            -- True if Name, used on UseRow inside Function, was declared there as a C class.
-            -- Searches parameters and locals; the last declaration before the use wins.
-            local function IsClassObject(Function, Name, UseRow, Bufnr)
-                local bIsClass = false
+            -- Every parameter and local declared in a function, in order: { Name, Row, bIsClass }.
+            -- Collected once per function and reused until the buffer changes, so a long function
+            -- isn't walked again for every member used inside it.
+            -- Keyed by the function's range: within one changedtick the text can't differ.
+            local DeclarationCache = {}
+
+            vim.api.nvim_create_autocmd("BufWipeout", {
+                callback = function(Args)
+                    DeclarationCache[Args.buf] = nil
+                end,
+            })
+
+            local function GetDeclarations(Function, Bufnr)
+                local Tick = vim.api.nvim_buf_get_changedtick(Bufnr)
+                local BufferCache = DeclarationCache[Bufnr]
+                if not BufferCache or BufferCache.Tick ~= Tick then
+                    BufferCache = { Tick = Tick, Functions = {} }
+                    DeclarationCache[Bufnr] = BufferCache
+                end
+
+                local Key = table.concat({ Function:range() }, ":")
+                local Declarations = BufferCache.Functions[Key]
+                if Declarations then
+                    return Declarations
+                end
+
+                Declarations = {}
                 local function Walk(Node)
                     for Child in Node:iter_children() do
                         if Child:named() then
                             local Type = Child:type()
-                            if (Type == "parameter_declaration" or Type == "optional_parameter_declaration"
-                                    or Type == "declaration" or Type == "for_range_loop")
-                                and Child:start() <= UseRow then
+                            if Type == "parameter_declaration" or Type == "optional_parameter_declaration"
+                                    or Type == "declaration" or Type == "for_range_loop" then
                                 for _, Declarator in ipairs(Child:field("declarator")) do
-                                    if GetDeclaredName(Declarator, Bufnr) == Name then
-                                        bIsClass = IsClassDeclaration(Child, Declarator, Bufnr)
-                                    end
+                                    table.insert(Declarations, {
+                                        Name = GetDeclaredName(Declarator, Bufnr),
+                                        Row = Child:start(),
+                                        bIsClass = IsClassDeclaration(Child, Declarator, Bufnr),
+                                    })
                                 end
                             end
                             Walk(Child)
@@ -120,6 +144,20 @@ return {
                     end
                 end
                 Walk(Function)
+
+                BufferCache.Functions[Key] = Declarations
+                return Declarations
+            end
+
+            -- True if Name, used on UseRow inside Function, was declared there as a C class.
+            -- Searches parameters and locals; the last declaration before the use wins.
+            local function IsClassObject(Function, Name, UseRow, Bufnr)
+                local bIsClass = false
+                for _, Declaration in ipairs(GetDeclarations(Function, Bufnr)) do
+                    if Declaration.Row <= UseRow and Declaration.Name == Name then
+                        bIsClass = Declaration.bIsClass
+                    end
+                end
                 return bIsClass
             end
 

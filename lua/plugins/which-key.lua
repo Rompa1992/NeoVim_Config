@@ -12,7 +12,7 @@ return {
             delay = 400,  -- ms to wait before the popup appears
 
             icons = {
-                mappings = false,  -- no icons next to keys (no Nerd Font needed)
+                mappings = true,   -- icons next to keys (needs the Nerd Font)
             },
 
             -- Group names shown in the popup

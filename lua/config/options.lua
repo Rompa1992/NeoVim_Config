@@ -24,6 +24,7 @@ vim.opt.splitbelow = true       -- horizontal splits open below
 vim.opt.undofile = true         -- undo history survives closing and reopening a file
 vim.opt.ignorecase = true       -- search ignores case...
 vim.opt.smartcase = true        -- ...unless the search has a capital letter
+vim.opt.updatetime = 250        -- ms of no typing before CursorHold fires (default 4000)
 
 -- Enter, o and O never continue a comment onto the new line.
 -- Filetype plugins turn it back on per buffer, so it's removed after they run.
@@ -45,9 +46,3 @@ vim.opt.shiftwidth = 4          -- >>, <<, and auto-indent use 4
 vim.opt.softtabstop = 4         -- Tab / Backspace move by 4 in insert mode
 vim.opt.expandtab = true        -- Tab inserts spaces, not a tab character
 vim.opt.smartindent = true      -- auto-indent new lines after {
-
--- =============================================================================
--- Build
--- =============================================================================
--- Build command used by :make (runs from Neovim's working directory)
-vim.opt.makeprg = "cmake --build build"

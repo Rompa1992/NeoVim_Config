@@ -43,15 +43,6 @@ return {
                     -- codelldb sends program output to the REPL, so its terminal window would stay empty
                     terminal = { hide = { "codelldb" } },
                 },
-                -- Plain characters: the defaults need a Nerd Font
-                icons = {
-                    collapsed = "+ ",
-                    expanded = "- ",
-                    enabled = "[x]",
-                    disabled = "[ ]",
-                    filter = "f",
-                    negate = "!",
-                },
                 render = {
                     breakpoints = { align = true },
                     threads = { align = true },

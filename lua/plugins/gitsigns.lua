@@ -6,6 +6,8 @@ return {
         --      Space + gp   preview the change under the cursor
         --      Space + gb   who last changed this line (blame)
         --      Space + gr   undo (reset) the change under the cursor
+        --      Space + gs   stage the change under the cursor, ready to commit
+        --      Space + gB   always show who last changed the cursor's line, at its end (toggle)
         "lewis6991/gitsigns.nvim",
         event = { "BufReadPre", "BufNewFile" },
 
@@ -22,6 +24,8 @@ return {
                 map("<leader>gp", gs.preview_hunk, "Preview change")
                 map("<leader>gb", gs.blame_line, "Blame line")
                 map("<leader>gr", gs.reset_hunk, "Reset change")
+                map("<leader>gs", gs.stage_hunk, "Stage change")
+                map("<leader>gB", gs.toggle_current_line_blame, "Toggle line blame")
             end,
         },
     },
