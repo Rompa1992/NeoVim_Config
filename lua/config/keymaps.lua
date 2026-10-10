@@ -8,6 +8,13 @@ vim.keymap.set({ "n", "i" }, "<F2>", function()
     vim.cmd("Neotree toggle")
 end, { desc = "File tree" })
 
+-- F3: every open file, listed down the side, from Normal or Insert mode.
+-- Enter opens one, d closes it. Holds far more than the tabs along the top.
+vim.keymap.set({ "n", "i" }, "<F3>", function()
+    vim.cmd("stopinsert")
+    vim.cmd("Neotree toggle buffers")
+end, { desc = "Open files list" })
+
 -- jj in Insert mode returns to Normal mode
 vim.keymap.set("i", "jj", "<Esc>", { desc = "Exit insert mode" })
 
